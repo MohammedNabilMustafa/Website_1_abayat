@@ -19,7 +19,9 @@ node tests/accounts.cjs
 
 ## Deployment
 
-Vercel serves only `dist`, as configured by `vercel.json`. This repository also retains the existing Sites project manifest under `.openai/hosting.json`; it is not part of the public site output.
+Vercel serves only `dist`, as configured by `vercel.json`. The original Sites project manifest remains in the local checkout under `.openai/hosting.json`; it is excluded from the public GitHub copy and Vercel upload.
+
+Live demo: https://abayat-store-demo.vercel.app
 
 ## Demo limitations
 
