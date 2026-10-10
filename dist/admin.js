@@ -33,4 +33,5 @@ function addSampleOrders(){if(orders.some(o=>o.sample)){toast('الطلبات ا
 const originalSetStatus=setStatus;
 setStatus=function(id,s){const o=orders.find(o=>o.id===id);if(o?.sample){o.status=s;save();render(false);toast('تم تحديث الطلب التجريبي')}else originalSetStatus(id,s)};
 function init(){if(!products.length){toast('أضيفي منتجًا للبدء')}$('#search').addEventListener('input',e=>{query=e.target.value.trim();pageNumbers.shop=1;if(!location.hash.startsWith('#shop'))location.hash='shop';else render(false)});window.addEventListener('hashchange',()=>{size='M';qty=1;selectedGallery=0;pageNumbers={};render()});render();if(mediaStorageError)toast('حفظ الصور غير متاح في هذا المتصفح. جرّبي متصفحًا آخر.')}
-openMediaDb().then(init).catch(()=>{mediaStorageError=true;init()});
+const pageScriptsReady=new Promise(resolve=>{if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',resolve,{once:true});else resolve()});
+Promise.all([pageScriptsReady,openMediaDb().catch(()=>{mediaStorageError=true})]).then(init);
