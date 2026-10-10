@@ -15,3 +15,5 @@ const oldImageSlots=imageSlots;
 imageSlots=()=>{const defaults=oldImageSlots().filter(s=>!s.key.startsWith('category-'));return [...defaults,...collections.map(c=>({key:c.imageKey,title:'تشكيلة '+c.name,type:'site',note:'بطاقة التشكيلة',ratio:'wide'}))]};
 const beforeCatalogueRender=render;
 render=function(scroll=true){beforeCatalogueRender(scroll);const nav=document.querySelector('body>nav');if(nav){nav.innerHTML=`<a href="#home">الرئيسية</a><a href="#shop">العبايات</a>${collections.slice(0,6).map(c=>`<a href="#shop/${c.id}">${esc(c.name)}</a>`).join('')}<a href="#favorites">المفضلة</a><a href="#orders">طلباتي</a>`}};
+
+const beforeNavHighlight=render;render=function(scroll=true){beforeNavHighlight(scroll);const hash=location.hash||'#home';document.querySelectorAll('body>nav:not(.mobile-bottom-nav) a').forEach(a=>{const active=a.getAttribute('href')===hash||(hash.startsWith('#product/')&&a.getAttribute('href')==='#shop');if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')})};
