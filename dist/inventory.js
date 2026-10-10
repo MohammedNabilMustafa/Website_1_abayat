@@ -1,0 +1,13 @@
+/* Variant stock is the source of truth; stock is a cached total for reports. */
+function sizeStock(p,s){const n=Object.hasOwn(p.stockBySize||{},s)?p.stockBySize[s]:0;return Number.isSafeInteger(n)&&n>=0?n:0}
+function syncStock(p){p.stock=productSizes(p).reduce((n,s)=>n+sizeStock(p,s),0)}
+function inventoryGroups(items){const groups=new Map();for(const x of items){if(!Number.isSafeInteger(x.qty)||x.qty<1||typeof x.size!=='string')return null;const key=JSON.stringify([x.id,x.size]),row=groups.get(key)||{id:x.id,size:x.size,qty:0};row.qty+=x.qty;if(!Number.isSafeInteger(row.qty))return null;groups.set(key,row)}return [...groups.values()]}
+function inventoryCanReserve(items){const rows=inventoryGroups(items);return !!rows&&rows.every(x=>{const p=products.find(p=>p.id===x.id);return p&&productSizes(p).includes(x.size)&&sizeStock(p,x.size)>=x.qty})}
+function adjustInventory(items,direction){const rows=inventoryGroups(items);if(!rows)return;for(const x of rows){const p=products.find(p=>p.id===x.id);if(!p)continue;if(direction>0&&!productSizes(p).includes(x.size))p.sizes=[...productSizes(p),x.size];p.stockBySize={...p.stockBySize,[x.size]:sizeStock(p,x.size)+direction*x.qty};syncStock(p)}}
+function stockFields(sizes,values){return sizes.map(s=>`<label class="field">مخزون ${esc(s)}<input type="number" name="stock:${esc(s)}" data-stock-size="${esc(s)}" value="${Number.isSafeInteger(values[s])&&values[s]>=0?values[s]:0}" min="0" max="1000000" step="1" required oninput="updateStockTotal(this.form)"></label>`).join('')}
+function updateStockTotal(form){const total=[...form.querySelectorAll('[data-stock-size]')].reduce((n,i)=>n+(Number(i.value)||0),0);form.querySelector('#stock-total').textContent=total}
+function refreshSizeStockFields(form){const sizes=[...new Set([...form.querySelectorAll('[name="sizes"]:checked')].map(i=>i.value).concat(form.elements.customSizes.value.split(/[,،]/).map(s=>s.trim()).filter(Boolean)))];const fields=form.querySelector('#size-stock-fields');form.stockDraft={...(form.stockDraft||{}),...Object.fromEntries([...fields.querySelectorAll('input')].map(i=>[i.dataset.stockSize,i.value]))};fields.innerHTML=stockFields(sizes,Object.fromEntries(Object.entries(form.stockDraft).map(([s,n])=>[s,Number(n)])));updateStockTotal(form)}
+// Old saved products lack a reliable size allocation. Retain their old total as
+// a migration note and require an explicit allocation instead of inventing it.
+for(const p of products){if(!p.stockBySize){p.unallocatedStock=Number.isSafeInteger(p.stock)&&p.stock>0?p.stock:0;p.stockBySize=Object.fromEntries(productSizes(p).map(s=>[s,0]))}syncStock(p)}
+save();
